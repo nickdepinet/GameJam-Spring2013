@@ -97,7 +97,6 @@ def play_level() :
         FPS_CLOCK.tick(FPS)
 
 def move_player(direction):
-    print "movin player"
     x = PLAYER_DATA['x']
     y = PLAYER_DATA['y']
     if (direction == DOWN):

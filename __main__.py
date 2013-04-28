@@ -23,9 +23,10 @@ LEFT = 0
 RIGHT = 1
 UP = 2
 DOWN = 3
+NODIR = 4
 
 def start() :
-    global LEVELS, LEVEL_INDEX, SPRITES, LEVEL_MAP
+    global LEVELS, LEVEL_INDEX, SPRITES, LEVEL_MAP, PLAYER_DATA
     LEVELS = parse_level_file('levels.txt')
     LEVEL_INDEX = 0
     #Sprite Map
@@ -36,6 +37,9 @@ def start() :
     LEVEL_MAP = {'#':SPRITES['wall'],
             ' ':SPRITES['floor']}
 
+    #Player Data
+    PLAYER_DATA = {'x':LEVELS[LEVEL_INDEX]['start']['x'],
+                'y':LEVELS[LEVEL_INDEX]['start']['y']}
     while True:
         result = play_level()
 
@@ -48,7 +52,7 @@ def start() :
 def play_level() :
         global CURRENT_IMAGE
         CURRENT_LEVEL = LEVELS[ LEVEL_INDEX ]
-
+        direction = NODIR
         # MAP = # ...
         # Handle all events here
         for event in pygame.event.get():
@@ -71,16 +75,36 @@ def play_level() :
                 elif (event.key == K_ESCAPE):
                     pygame.quit()
                     sys.exit()
-
+            move_player(direction)
         SURFACE.fill(BGCOLOR)
         mapSurface = draw_map(CURRENT_LEVEL)
         mapSurfaceRect = mapSurface.get_rect()
-        mapSurfaceRect.center = (320,240)
+        mapSurfaceRect.center = (320, 240)
         SURFACE.blit(mapSurface,mapSurfaceRect)
         #update the display
         pygame.display.update()
         #Wait a tick to draw the next frame
         FPS_CLOCK.tick(FPS)
+
+def move_player(direction):
+    print "movin player"
+    x = PLAYER_DATA['x']
+    y = PLAYER_DATA['y']
+    if (direction == DOWN):
+        if not isWall(x, y+1):
+            PLAYER_DATA['y'] += 1
+    elif (direction == RIGHT):
+        if not isWall(x+1,y):
+            PLAYER_DATA['x'] += 1
+    elif (direction == UP):
+        if not isWall(x,y-1):
+            PLAYER_DATA['y'] -= 1
+    elif (direction == LEFT):
+        if not isWall(x-1,y):
+            PLAYER_DATA['x'] -= 1
+
+def isWall(x, y):
+    return (LEVELS[LEVEL_INDEX]['map'][x][y] == '#')
 
 def draw_map(level):
     mapDrawWidth = int(level['width']*TILE_WIDTH)
@@ -95,6 +119,9 @@ def draw_map(level):
             else:
                 tileImg = LEVEL_MAP[' ']
             mapDrawSurface.blit(tileImg, tile)
+    playerImg = SPRITES['player']
+    playerTile = pygame.Rect(PLAYER_DATA['x']*TILE_WIDTH, PLAYER_DATA['y']*TILE_HEIGHT,TILE_WIDTH, TILE_HEIGHT)
+    mapDrawSurface.blit(playerImg, playerTile)
     return mapDrawSurface   
 
 def parse_level_file(filename) :

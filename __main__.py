@@ -13,16 +13,16 @@ pygame.display.set_caption('Deeper')
 FPS = 30
 FPS_CLOCK = pygame.time.Clock()
 
+#Some Constants to Use
+TILE_HEIGHT = 64
+TILE_WIDTH = 64
+BGCOLOR = (255,0,255)
+
 # Directions
 LEFT = 0
 RIGHT = 1
 UP = 2
 DOWN = 3
-
-#Some Constants to Use
-TILE_HEIGHT = 64
-TILE_WIDTH = 64
-BGCOLOR = (255,0,255)
 
 def start() :
     global LEVELS, LEVEL_INDEX, SPRITES, LEVEL_MAP
@@ -73,11 +73,29 @@ def play_level() :
                     sys.exit()
 
         SURFACE.fill(BGCOLOR)
-        #drawMap()
+        mapSurface = draw_map(CURRENT_LEVEL)
+        mapSurfaceRect = mapSurface.get_rect()
+        mapSurfaceRect.center = (320,240)
+        SURFACE.blit(mapSurface,mapSurfaceRect)
         #update the display
         pygame.display.update()
         #Wait a tick to draw the next frame
         FPS_CLOCK.tick(FPS)
+
+def draw_map(level):
+    mapDrawWidth = int(level['width']*TILE_WIDTH)
+    mapDrawHeight = int(level['height']*TILE_HEIGHT)
+    mapDrawSurface = pygame.Surface((mapDrawWidth, mapDrawHeight))
+    mapDrawSurface.fill(BGCOLOR)
+    for x in range(level['width']):
+        for y in range(level['height']):
+            tile = pygame.Rect((x*TILE_WIDTH),(y*TILE_HEIGHT), TILE_WIDTH, TILE_HEIGHT)
+            if level['map'][x][y] in LEVEL_MAP:
+                tileImg = LEVEL_MAP[level['map'][x][y]]
+            else:
+                tileImg = LEVEL_MAP[' ']
+            mapDrawSurface.blit(tileImg, tile)
+    return mapDrawSurface   
 
 def parse_level_file(filename) :
     assert os.path.exists(filename), "Cannot find the level file: %s" % (filename)

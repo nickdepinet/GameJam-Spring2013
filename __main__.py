@@ -13,6 +13,12 @@ pygame.display.set_caption('Deeper')
 FPS = 30
 FPS_CLOCK = pygame.time.Clock()
 
+# Directions
+LEFT = 0
+RIGHT = 1
+UP = 2
+DOWN = 3
+
 #Some Constants to Use
 TILE_HEIGHT = 64
 TILE_WIDTH = 64
@@ -58,7 +64,7 @@ def play_level() :
                 elif (event.key == K_UP or event.key == K_w):
                     direction = UP
                 elif (event.key == K_RIGHT or event.key == K_d):
-                    direction = K_RIGHT
+                    direction = RIGHT
                 elif (event.key == K_p):
                     #Pause
                     pass

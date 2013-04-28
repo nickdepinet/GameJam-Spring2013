@@ -47,8 +47,8 @@ def start() :
     #Player Data
     PLAYER_DATA = {'x':LEVELS[LEVEL_INDEX]['start']['x'],
                 'y':LEVELS[LEVEL_INDEX]['start']['y'],
-                'pixelX':LEVELS[LEVEL_INDEX]['start']['x']*TILE_WIDTH,
-                'pixelY':LEVELS[LEVEL_INDEX]['start']['y']*TILE_HEIGHT}
+                'pixelX':LEVELS[LEVEL_INDEX]['start']['x']*TILE_WIDTH-((LEVELS[LEVEL_INDEX]['start']['x']*TILE_WIDTH)-320)-32,
+                'pixelY':LEVELS[LEVEL_INDEX]['start']['y']*TILE_HEIGHT-((LEVELS[LEVEL_INDEX]['start']['y']*TILE_HEIGHT)-240)+32}
     print '++++++'
     print PLAYER_DATA['x']
     print PLAYER_DATA['pixelX']

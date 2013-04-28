@@ -1,31 +1,36 @@
 import os, sys
 import pygame
 from pygame.locals import *
+from classes import *
 
 pygame.init()
 
 #Set the window
 WINDOW_WIDTH = 640
 WINDOW_HEIGHT = 480
+HALF_WINDOW_WIDTH = WINDOW_WIDTH // 2
+HALF_WINDOW_HEIGHT = WINDOW_HEIGHT // 2
+
 SURFACE = pygame.display.set_mode((WINDOW_WIDTH,WINDOW_HEIGHT))
 
 #Set the window title
 pygame.display.set_caption('Deeper')
 
 #We need a set FPS for animations
-FPS = 60
+FPS = 30
 FPS_CLOCK = pygame.time.Clock()
 
+VELOCITY = 4
+
 #Some Constants to Use
-TILE_HEIGHT = 64
 TILE_WIDTH = 64
 BGCOLOR = (255,0,255)
 
 # Directions
-LEFT = 0
-RIGHT = 1
-UP = 2
-DOWN = 3
+UP = 0
+DOWN = 1
+RIGHT = 2
+LEFT = 3
 NODIR = 4
 
 # Fonts 
@@ -33,28 +38,33 @@ def font(size = 18) : return pygame.font.Font('Liberator.ttf', size)
 DEFAULT_FONT = font()
 
 def start() :
-    global LEVELS, LEVEL_INDEX, SPRITES, LEVEL_MAP, PLAYER_DATA
+    global LEVELS, LEVEL_INDEX, SPRITES, LEVEL_MAP, PLAYER
     LEVELS = parse_level_file('levels.txt')
     LEVEL_INDEX = 0
-    #Sprite Map
-    SPRITES = {'wall':pygame.image.load('Images/wall.png'),
-            'player':pygame.image.load('Images/player.png'),
-            'floor':pygame.image.load('Images/floor.png')}
-    #Floor Map
-    LEVEL_MAP = {'#':SPRITES['wall'],
-            ' ':SPRITES['floor']}
 
-    #Player Data
-    PLAYER_DATA = {'x':LEVELS[LEVEL_INDEX]['start']['x'],
-                'y':LEVELS[LEVEL_INDEX]['start']['y'],
-                'pixelX':LEVELS[LEVEL_INDEX]['start']['x']*TILE_WIDTH-((LEVELS[LEVEL_INDEX]['start']['x']*TILE_WIDTH)-320)-32,
-                'pixelY':LEVELS[LEVEL_INDEX]['start']['y']*TILE_HEIGHT-((LEVELS[LEVEL_INDEX]['start']['y']*TILE_HEIGHT)-240)+32}
-    print '++++++'
-    print PLAYER_DATA['x']
-    print PLAYER_DATA['pixelX']
-    print PLAYER_DATA['y']
-    print PLAYER_DATA['pixelY']
-    print '++++++'
+    # Sprite dictionary
+    SPRITES = {
+                'wall':   pygame.image.load('Images/wall.png'),
+                'player': pygame.image.load('Images/player.png'),
+                'floor':  pygame.image.load('Images/floor.png')
+              }
+
+    # Level Map to Sprite conversion dictionary
+    LEVEL_MAP = {
+                 '#': SPRITES['wall'],
+                 ' ': SPRITES['floor']
+                }
+
+    CURRENT_LEVEL = LEVELS[ LEVEL_INDEX ]
+
+    sprite_width = 16
+    half_sprite_width = sprite_width // 2
+
+    player_rect = pygame.Rect(HALF_WINDOW_WIDTH  - half_sprite_width,
+                              HALF_WINDOW_HEIGHT - half_sprite_width,
+                              sprite_width, sprite_width)
+
+    PLAYER = Player(SPRITES['player'], player_rect)
     startscreen()
     
     while True:
@@ -67,89 +77,96 @@ def start() :
 
 
 def play_level() :
-    global CURRENT_IMAGE
+    global CURRENT_LEVEL
     CURRENT_LEVEL = LEVELS[ LEVEL_INDEX ]
-    direction = NODIR
-    # MAP = # ...
-    # Handle all events here
+
+    start = CURRENT_LEVEL.start
+    PLAYER.x = (CURRENT_LEVEL.width - start.x) * 64 - 20
+    PLAYER.y = (CURRENT_LEVEL.height - start.y) * 64 - 20
+
     pygame.key.set_repeat(5,5)
     while True:
+        # All event handlers
         for event in pygame.event.get():
-            if event.type == QUIT:
-                pygame.quit()
-                sys.exit()
-            # KeyPress, check which key it is
+            if event.type == QUIT: terminate()
             elif event.type == KEYDOWN:
-                if (event.key == K_LEFT or event.key == K_a):
-                    direction = LEFT
-                elif (event.key == K_DOWN or event.key == K_s):
-                    direction = DOWN
-                elif (event.key == K_UP or event.key == K_w):
-                    direction = UP
-                elif (event.key == K_RIGHT or event.key == K_d):
-                    direction = RIGHT
-                elif (event.key == K_p):
-                    #Pause
-                    pass
-                elif (event.key == K_ESCAPE):
-                    pygame.quit()
-                    sys.exit()
-            move_player(direction)
+                if event.key >= K_UP and event.key <= K_LEFT:
+                    direction = event.key - K_UP
+                elif event.key == K_w: direction = UP
+                elif event.key == K_s: direction = DOWN
+                elif event.key == K_d: direction = RIGHT
+                elif event.key == K_a: direction = LEFT
+                elif (event.key == K_ESCAPE): terminate()
+                else : direction = NODIR
+                move_player(direction)
+
+        # Draw the background
         SURFACE.fill(BGCOLOR)
-        mapSurface = draw_map(CURRENT_LEVEL)
-        mapSurfaceRect = mapSurface.get_rect()
-        mapSurfaceRect.center = (PLAYER_DATA['pixelX'],PLAYER_DATA['pixelY'])
-        SURFACE.blit(mapSurface,mapSurfaceRect)
-        playerImg = SPRITES['player']
-        #playerTile = pygame.Rect(PLAYER_DATA['pixelX'],PLAYER_DATA['pixelY'],TILE_WIDTH/4,TILE_HEIGHT/4)
-        playerTile = pygame.Rect(312,232,16,16)
-        SURFACE.blit(playerImg, playerTile)
-        #update the display
+
+        #===========================================#
+        # Generate the map content relative to the viewport/player location
+        map_surface = draw_map()
+        map_surface_rect = map_surface.get_rect()
+        map_surface_rect.center = (PLAYER.x - 135, PLAYER.y + 42) # NOTE: These transformations only work for the current window resolution
+
+        # Draw the map
+        SURFACE.blit(map_surface, map_surface_rect)
+        #===========================================#
+        # Draw the player
+        SURFACE.blit( PLAYER.sprite, PLAYER.rect )
+        # Draw the frame
         pygame.display.update()
-        #Wait a tick to draw the next frame
+        # Wait for the frame to tick before proceeding to render the next frame
         FPS_CLOCK.tick(FPS)
 
 def move_player(direction):
-    x = PLAYER_DATA['pixelX']
-    y = PLAYER_DATA['pixelY']
-    if (direction == DOWN):
-        if not isWall(int(x/TILE_WIDTH), int((y-2)/TILE_HEIGHT)):
-            PLAYER_DATA['pixelY'] -= 2
-    elif (direction == RIGHT):
-        if not isWall(int((x-2)/TILE_WIDTH),int(y/TILE_HEIGHT)):
-            PLAYER_DATA['pixelX'] -= 2
-    elif (direction == UP):
-        if not isWall(int(x/TILE_WIDTH),int((y+2)/TILE_HEIGHT)):
-            PLAYER_DATA['pixelY'] += 2
-    elif (direction == LEFT):
-        if not isWall(int((x+2)/TILE_WIDTH),int(y/TILE_HEIGHT)):
-            PLAYER_DATA['pixelX'] += 2
+    x, y = PLAYER.x, PLAYER.y
 
-def isWall(x, y):
-    level = LEVELS[LEVEL_INDEX]
-    height = level['height']
-    width = level['width']
-    return x >= 0 and x < width and y >= 0 and y < height and (level['map'][x][y] == '#')
+    if   direction == UP:    y += VELOCITY
+    elif direction == DOWN:  y -= VELOCITY
+    elif direction == RIGHT: x -= VELOCITY
+    elif direction == LEFT:  x += VELOCITY
 
-def draw_map(level):
-    mapDrawWidth = int(level['width']*TILE_WIDTH)
-    mapDrawHeight = int(level['height']*TILE_HEIGHT)
+    if not_in_wall(x, y):
+        PLAYER.x, PLAYER.y = x, y
+    elif not_in_wall(x, PLAYER.y):
+        print("y")
+        PLAYER.y //= TILE_WIDTH
+        PLAYER.y += 1
+        PLAYER.y *= TILE_WIDTH
+        PLAYER.y -= 8
+    else:
+        print("x")
+        PLAYER.x //= TILE_WIDTH
+        PLAYER.x += 1
+        PLAYER.x *= TILE_WIDTH
+        PLAYER.x -= 8
+
+def not_in_wall(x, y):
+    x //= TILE_WIDTH
+    y //= TILE_WIDTH
+
+    width = CURRENT_LEVEL.width
+    height = CURRENT_LEVEL.height
+
+    return( x >= 0 and x < width and 
+            y >= 0 and y < height and
+            CURRENT_LEVEL.map[width - x - 1][height - y - 1] in (' ', '@'))
+
+def draw_map():
+    mapDrawWidth = CURRENT_LEVEL.width * TILE_WIDTH
+    mapDrawHeight = CURRENT_LEVEL.height * TILE_WIDTH
     mapDrawSurface = pygame.Surface((mapDrawWidth, mapDrawHeight))
     mapDrawSurface.fill(BGCOLOR)
-    for x in range(level['width']):
-        for y in range(level['height']):
-            tile = pygame.Rect((x*TILE_WIDTH),(y*TILE_HEIGHT), TILE_WIDTH, TILE_HEIGHT)
-            if level['map'][x][y] in LEVEL_MAP:
-                tileImg = LEVEL_MAP[level['map'][x][y]]
+    map = CURRENT_LEVEL.map
+    for x in range(CURRENT_LEVEL.width):
+        for y in range(CURRENT_LEVEL.height):
+            tile = pygame.Rect((x*TILE_WIDTH),(y*TILE_WIDTH), TILE_WIDTH, TILE_WIDTH)
+            if map[x][y] in LEVEL_MAP:
+                tileImg = LEVEL_MAP[map[x][y]]
             else:
                 tileImg = LEVEL_MAP[' ']
             mapDrawSurface.blit(tileImg, tile)
-    #playerImg = SPRITES['player']
-    #playerTile = pygame.Rect(PLAYER_DATA['x']*TILE_WIDTH, PLAYER_DATA['y']*TILE_HEIGHT,TILE_WIDTH, TILE_HEIGHT)
-    #print '++++++'
-    #print PLAYER_DATA['pixelX']
-    #print PLAYER_DATA['pixelY']
-    #print '++++++'
     return mapDrawSurface   
 
 def startscreen() :
@@ -244,30 +261,32 @@ def parse_level_file(filename) :
                     map[x].append(map_text_lines[y][x])
 
             # Find the starting location
-            start_x = None
-            start_y = None
-            goal_x = None
-            goal_y = None
+            start = goal = None
             for x in range(width) :
                 for y in range(height) :
                     current_square = map[x][y]
                     if current_square == '@' :
-                        start_x = x
-                        start_y = y
+                        start = Point(x, y)
                     elif current_square == '.' :
-                        goal_x = x
-                        goal_y = y
-            level = {'width': width,
-                     'height': height,
-                     'map': map,
-                     'start': { 'x': start_x, 'y': start_y },
-                     'goal':  { 'x': goal_x,  'y': goal_y  }
-                    }
+                        goal = Point(x, y)
+            print start.x
+            print start.y
+            level = Level(map, start, goal)
+            # level = {'width': width,
+            #          'height': height,
+            #          'map': map,
+            #          'start': { 'x': start_x, 'y': start_y },
+            #          'goal':  { 'x': goal_x,  'y': goal_y  }
+            #         }
             levels.append(level)
 
             map_text_lines = []
             map = []
     return levels
+
+def terminate() :
+    pygame.quit()
+    sys.exit()
 
 if __name__ == '__main__':
     start()

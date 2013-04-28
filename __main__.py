@@ -46,7 +46,9 @@ def start() :
 
     #Player Data
     PLAYER_DATA = {'x':LEVELS[LEVEL_INDEX]['start']['x'],
-                'y':LEVELS[LEVEL_INDEX]['start']['y']}
+                'y':LEVELS[LEVEL_INDEX]['start']['y'],
+                'pixelX': LEVELS[LEVEL_INDEX]['start']['x']*TILE_WIDTH,
+                'pixelY': LEVELS[LEVEL_INDEX]['start']['x']*TILE_HEIGHT}
 
     startscreen()
     
@@ -60,11 +62,13 @@ def start() :
 
 
 def play_level() :
-        global CURRENT_IMAGE
-        CURRENT_LEVEL = LEVELS[ LEVEL_INDEX ]
-        direction = NODIR
-        # MAP = # ...
-        # Handle all events here
+    global CURRENT_IMAGE
+    CURRENT_LEVEL = LEVELS[ LEVEL_INDEX ]
+    direction = NODIR
+    # MAP = # ...
+    # Handle all events here
+    pygame.key.set_repeat(5,5)
+    while True:
         for event in pygame.event.get():
             if event.type == QUIT:
                 pygame.quit()
@@ -97,22 +101,26 @@ def play_level() :
         FPS_CLOCK.tick(FPS)
 
 def move_player(direction):
-    x = PLAYER_DATA['x']
-    y = PLAYER_DATA['y']
+    x = PLAYER_DATA['pixelX']
+    y = PLAYER_DATA['pixelY']
     if (direction == DOWN):
-        if not isWall(x, y+1):
-            PLAYER_DATA['y'] += 1
+        if not isWall(int(x/TILE_WIDTH), int(y/TILE_HEIGHT)+1):
+            PLAYER_DATA['pixelY'] += 1
     elif (direction == RIGHT):
-        if not isWall(x+1,y):
-            PLAYER_DATA['x'] += 1
+        if not isWall(int(x/TILE_WIDTH)+1,int(y/TILE_HEIGHT)):
+            PLAYER_DATA['pixelX'] += 1
     elif (direction == UP):
-        if not isWall(x,y-1):
-            PLAYER_DATA['y'] -= 1
+        if not isWall(int(x/TILE_WIDTH),int(y/TILE_HEIGHT)):
+            PLAYER_DATA['pixelY'] -= 1
     elif (direction == LEFT):
-        if not isWall(x-1,y):
-            PLAYER_DATA['x'] -= 1
+        if not isWall(int(x/TILE_WIDTH)-1,int(y/TILE_HEIGHT)):
+            PLAYER_DATA['pixelY'] -= 1
 
 def isWall(x, y):
+    print '======='
+    print x
+    print y
+    print '========'
     return (LEVELS[LEVEL_INDEX]['map'][x][y] == '#')
 
 def draw_map(level):
@@ -129,7 +137,8 @@ def draw_map(level):
                 tileImg = LEVEL_MAP[' ']
             mapDrawSurface.blit(tileImg, tile)
     playerImg = SPRITES['player']
-    playerTile = pygame.Rect(PLAYER_DATA['x']*TILE_WIDTH, PLAYER_DATA['y']*TILE_HEIGHT,TILE_WIDTH, TILE_HEIGHT)
+    #playerTile = pygame.Rect(PLAYER_DATA['x']*TILE_WIDTH, PLAYER_DATA['y']*TILE_HEIGHT,TILE_WIDTH, TILE_HEIGHT)
+    playerTile = pygame.Rect(PLAYER_DATA['pixelX'],PLAYER_DATA['pixelY'],TILE_WIDTH,TILE_HEIGHT)
     mapDrawSurface.blit(playerImg, playerTile)
     return mapDrawSurface   
 

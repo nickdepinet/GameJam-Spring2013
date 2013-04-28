@@ -13,7 +13,7 @@ SURFACE = pygame.display.set_mode((WINDOW_WIDTH,WINDOW_HEIGHT))
 pygame.display.set_caption('Deeper')
 
 #We need a set FPS for animations
-FPS = 30
+FPS = 60
 FPS_CLOCK = pygame.time.Clock()
 
 #Some Constants to Use
@@ -47,9 +47,14 @@ def start() :
     #Player Data
     PLAYER_DATA = {'x':LEVELS[LEVEL_INDEX]['start']['x'],
                 'y':LEVELS[LEVEL_INDEX]['start']['y'],
-                'pixelX': LEVELS[LEVEL_INDEX]['start']['x']*TILE_WIDTH,
-                'pixelY': LEVELS[LEVEL_INDEX]['start']['x']*TILE_HEIGHT}
-
+                'pixelX':LEVELS[LEVEL_INDEX]['start']['x']*TILE_WIDTH,
+                'pixelY':LEVELS[LEVEL_INDEX]['start']['y']*TILE_HEIGHT}
+    print '++++++'
+    print PLAYER_DATA['x']
+    print PLAYER_DATA['pixelX']
+    print PLAYER_DATA['y']
+    print PLAYER_DATA['pixelY']
+    print '++++++'
     startscreen()
     
     while True:
@@ -95,6 +100,9 @@ def play_level() :
         mapSurfaceRect = mapSurface.get_rect()
         mapSurfaceRect.center = (320, 240)
         SURFACE.blit(mapSurface,mapSurfaceRect)
+        playerImg = SPRITES['player']
+        playerTile = pygame.Rect(PLAYER_DATA['pixelX'],PLAYER_DATA['pixelY'],TILE_WIDTH/4,TILE_HEIGHT/4)
+        SURFACE.blit(playerImg, playerTile)
         #update the display
         pygame.display.update()
         #Wait a tick to draw the next frame
@@ -104,23 +112,19 @@ def move_player(direction):
     x = PLAYER_DATA['pixelX']
     y = PLAYER_DATA['pixelY']
     if (direction == DOWN):
-        if not isWall(int(x/TILE_WIDTH), int(y/TILE_HEIGHT)+1):
+        if not isWall(int(x/TILE_WIDTH), int((y+1)/TILE_HEIGHT)):
             PLAYER_DATA['pixelY'] += 1
     elif (direction == RIGHT):
-        if not isWall(int(x/TILE_WIDTH)+1,int(y/TILE_HEIGHT)):
+        if not isWall(int((x+1)/TILE_WIDTH),int(y/TILE_HEIGHT)):
             PLAYER_DATA['pixelX'] += 1
     elif (direction == UP):
-        if not isWall(int(x/TILE_WIDTH),int(y/TILE_HEIGHT)):
+        if not isWall(int(x/TILE_WIDTH),int((y-1)/TILE_HEIGHT)):
             PLAYER_DATA['pixelY'] -= 1
     elif (direction == LEFT):
-        if not isWall(int(x/TILE_WIDTH)-1,int(y/TILE_HEIGHT)):
-            PLAYER_DATA['pixelY'] -= 1
+        if not isWall(int((x-1)/TILE_WIDTH),int(y/TILE_HEIGHT)):
+            PLAYER_DATA['pixelX'] -= 1
 
 def isWall(x, y):
-    print '======='
-    print x
-    print y
-    print '========'
     level = LEVELS[LEVEL_INDEX]
     height = level['height']
     width = level['width']
@@ -139,10 +143,12 @@ def draw_map(level):
             else:
                 tileImg = LEVEL_MAP[' ']
             mapDrawSurface.blit(tileImg, tile)
-    playerImg = SPRITES['player']
+    #playerImg = SPRITES['player']
     #playerTile = pygame.Rect(PLAYER_DATA['x']*TILE_WIDTH, PLAYER_DATA['y']*TILE_HEIGHT,TILE_WIDTH, TILE_HEIGHT)
-    playerTile = pygame.Rect(PLAYER_DATA['pixelX'],PLAYER_DATA['pixelY'],TILE_WIDTH,TILE_HEIGHT)
-    mapDrawSurface.blit(playerImg, playerTile)
+    #print '++++++'
+    #print PLAYER_DATA['pixelX']
+    #print PLAYER_DATA['pixelY']
+    #print '++++++'
     return mapDrawSurface   
 
 def startscreen() :

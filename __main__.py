@@ -98,10 +98,11 @@ def play_level() :
         SURFACE.fill(BGCOLOR)
         mapSurface = draw_map(CURRENT_LEVEL)
         mapSurfaceRect = mapSurface.get_rect()
-        mapSurfaceRect.center = (320, 240)
+        mapSurfaceRect.center = (PLAYER_DATA['pixelX'],PLAYER_DATA['pixelY'])
         SURFACE.blit(mapSurface,mapSurfaceRect)
         playerImg = SPRITES['player']
-        playerTile = pygame.Rect(PLAYER_DATA['pixelX'],PLAYER_DATA['pixelY'],TILE_WIDTH/4,TILE_HEIGHT/4)
+        #playerTile = pygame.Rect(PLAYER_DATA['pixelX'],PLAYER_DATA['pixelY'],TILE_WIDTH/4,TILE_HEIGHT/4)
+        playerTile = pygame.Rect(312,232,16,16)
         SURFACE.blit(playerImg, playerTile)
         #update the display
         pygame.display.update()
@@ -112,17 +113,17 @@ def move_player(direction):
     x = PLAYER_DATA['pixelX']
     y = PLAYER_DATA['pixelY']
     if (direction == DOWN):
-        if not isWall(int(x/TILE_WIDTH), int((y+1)/TILE_HEIGHT)):
-            PLAYER_DATA['pixelY'] += 1
+        if not isWall(int(x/TILE_WIDTH), int((y-2)/TILE_HEIGHT)):
+            PLAYER_DATA['pixelY'] -= 2
     elif (direction == RIGHT):
-        if not isWall(int((x+1)/TILE_WIDTH),int(y/TILE_HEIGHT)):
-            PLAYER_DATA['pixelX'] += 1
+        if not isWall(int((x-2)/TILE_WIDTH),int(y/TILE_HEIGHT)):
+            PLAYER_DATA['pixelX'] -= 2
     elif (direction == UP):
-        if not isWall(int(x/TILE_WIDTH),int((y-1)/TILE_HEIGHT)):
-            PLAYER_DATA['pixelY'] -= 1
+        if not isWall(int(x/TILE_WIDTH),int((y+2)/TILE_HEIGHT)):
+            PLAYER_DATA['pixelY'] += 2
     elif (direction == LEFT):
-        if not isWall(int((x-1)/TILE_WIDTH),int(y/TILE_HEIGHT)):
-            PLAYER_DATA['pixelX'] -= 1
+        if not isWall(int((x+2)/TILE_WIDTH),int(y/TILE_HEIGHT)):
+            PLAYER_DATA['pixelX'] += 2
 
 def isWall(x, y):
     level = LEVELS[LEVEL_INDEX]

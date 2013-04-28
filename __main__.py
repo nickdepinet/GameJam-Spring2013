@@ -5,7 +5,10 @@ from pygame.locals import *
 pygame.init()
 
 #Set the window
-SURFACE = pygame.display.set_mode((640,480))
+WINDOW_WIDTH = 640
+WINDOW_HEIGHT = 480
+SURFACE = pygame.display.set_mode((WINDOW_WIDTH,WINDOW_HEIGHT))
+
 #Set the window title
 pygame.display.set_caption('Deeper')
 
@@ -25,6 +28,10 @@ UP = 2
 DOWN = 3
 NODIR = 4
 
+# Fonts 
+def font(size = 18) : return pygame.font.Font('Liberator.ttf', size)
+DEFAULT_FONT = font()
+
 def start() :
     global LEVELS, LEVEL_INDEX, SPRITES, LEVEL_MAP, PLAYER_DATA
     LEVELS = parse_level_file('levels.txt')
@@ -40,6 +47,9 @@ def start() :
     #Player Data
     PLAYER_DATA = {'x':LEVELS[LEVEL_INDEX]['start']['x'],
                 'y':LEVELS[LEVEL_INDEX]['start']['y']}
+
+    startscreen()
+    
     while True:
         result = play_level()
 
@@ -123,6 +133,53 @@ def draw_map(level):
     playerTile = pygame.Rect(PLAYER_DATA['x']*TILE_WIDTH, PLAYER_DATA['y']*TILE_HEIGHT,TILE_WIDTH, TILE_HEIGHT)
     mapDrawSurface.blit(playerImg, playerTile)
     return mapDrawSurface   
+
+def startscreen() :
+    title = "Sneaky Spy Man Bro Child Son"
+
+    display_text(title, {'alignment' : 'center'}, font(40) )
+
+    while True :
+        for event in pygame.event.get() :
+            if event.type == QUIT :
+                pygame.quit()
+                sys.exit()
+            elif event.type == KEYDOWN :
+                return
+
+        pygame.display.update()
+        FPS_CLOCK.tick()
+
+
+def display_text(text, spec, font = DEFAULT_FONT) :
+    rendered_text = font.render(text, 1, (252,231,206))
+    rect = rendered_text.get_rect()
+
+    width = rect.width
+    height = rect.height
+
+    if 'x' in spec : rect.x = spec['x']
+    if 'y' in spec : rect.y = spec['y']
+
+    if 'alignment' in spec :
+        a = spec['alignment']
+        if a == 'center' :
+            rect.x = ( WINDOW_WIDTH - width ) // 2
+        elif a == 'left' :
+            rect.x = 0
+        elif a == 'right' :
+            rect.x = WINDOW_WIDTH - width
+
+    if 'v_alignment' in spec :
+        a = spec['v_alignment']
+        if a == 'center' :
+            rect.y = ( WINDOW_HEIGHT - height ) // 2
+        elif a == 'top' :
+            rect.y = 0
+        elif a == 'bottom' :
+            rect.y = WINDOW_HEIGHT - height
+
+    SURFACE.blit(rendered_text, rect)
 
 def parse_level_file(filename) :
     assert os.path.exists(filename), "Cannot find the level file: %s" % (filename)

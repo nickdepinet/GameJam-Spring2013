@@ -121,7 +121,10 @@ def isWall(x, y):
     print x
     print y
     print '========'
-    return (LEVELS[LEVEL_INDEX]['map'][x][y] == '#')
+    level = LEVELS[LEVEL_INDEX]
+    height = level['height']
+    width = level['width']
+    return x >= 0 and x < width and y >= 0 and y < height and (level['map'][x][y] == '#')
 
 def draw_map(level):
     mapDrawWidth = int(level['width']*TILE_WIDTH)

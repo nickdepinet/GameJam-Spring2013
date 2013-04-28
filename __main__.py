@@ -13,11 +13,22 @@ pygame.display.set_caption('Deeper')
 FPS = 30
 FPS_CLOCK = pygame.time.Clock()
 
+#Some Constants to Use
+TILE_HEIGHT = 64
+TILE_WIDTH = 64
+BGCOLOR = (255,0,255)
 
 def start() :
-    global LEVELS, LEVEL_INDEX
+    global LEVELS, LEVEL_INDEX, SPRITES, LEVEL_MAP
     LEVELS = parse_level_file('levels.txt')
     LEVEL_INDEX = 0
+    #Sprite Map
+    SPRITES = {'wall':pygame.image.load('Images/wall.png'),
+            'player':pygame.image.load('Images/player.png'),
+            'floor':pygame.image.load('Images/floor.png')}
+    #Floor Map
+    LEVEL_MAP = {'#':SPRITES['wall'],
+            ' ':SPRITES['floor']}
 
     while True:
         result = play_level()
@@ -38,10 +49,29 @@ def play_level() :
             if event.type == QUIT:
                 pygame.quit()
                 sys.exit()
+            # KeyPress, check which key it is
+            elif event.type == KEYDOWN:
+                if (event.key == K_LEFT or event.key == K_a):
+                    direction = LEFT
+                elif (event.key == K_DOWN or event.key == K_s):
+                    direction = DOWN
+                elif (event.key == K_UP or event.key == K_w):
+                    direction = UP
+                elif (event.key == K_RIGHT or event.key == K_d):
+                    direction = K_RIGHT
+                elif (event.key == K_p):
+                    #Pause
+                    pass
+                elif (event.key == K_ESCAPE):
+                    pygame.quit()
+                    sys.exit()
+
+        SURFACE.fill(BGCOLOR)
+        #drawMap()
         #update the display
         pygame.display.update()
         #Wait a tick to draw the next frame
-        fpsClock.tick(FPS)
+        FPS_CLOCK.tick(FPS)
 
 def parse_level_file(filename) :
     assert os.path.exists(filename), "Cannot find the level file: %s" % (filename)
